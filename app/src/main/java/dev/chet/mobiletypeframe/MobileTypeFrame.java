@@ -44,14 +44,20 @@ public final class MobileTypeFrame implements IXposedHookInitPackageResources, I
                         @Override
                         public Drawable newDrawable(XResources res, int id) {
                             String shape = ShapeProvider.SQUARE;
+                            int fontPercent = ShapeProvider.DEFAULT_FONT_PERCENT;
                             try {
                                 Object app = XposedHelpers.callStaticMethod(
                                         XposedHelpers.findClass("android.app.ActivityThread", null),
                                         "currentApplication");
-                                if (app instanceof Context) shape = selectedShape((Context) app);
+                                if (app instanceof Context) {
+                                    Bundle settings = selectedSettings((Context) app);
+                                    shape = settings.getString("shape", ShapeProvider.SQUARE);
+                                    fontPercent = settings.getInt("fontPercent",
+                                            ShapeProvider.DEFAULT_FONT_PERCENT);
+                                }
                             } catch (Throwable ignored) { }
                             return new FramedTypeDrawable(label, res.getDisplayMetrics().density,
-                                    shape);
+                                    shape, fontPercent);
                         }
                     });
                 replaced++;
@@ -76,9 +82,12 @@ public final class MobileTypeFrame implements IXposedHookInitPackageResources, I
                     if (!isMobileType(view)) return;
                     String label = labelForIcon(hook.args[0], view);
                     if (label == null) return;
-                    String shape = selectedShape(view.getContext());
+                    Bundle settings = selectedSettings(view.getContext());
+                    String shape = settings.getString("shape", ShapeProvider.SQUARE);
+                    int fontPercent = settings.getInt("fontPercent",
+                            ShapeProvider.DEFAULT_FONT_PERCENT);
                     view.setImageDrawable(new FramedTypeDrawable(label,
-                            view.getResources().getDisplayMetrics().density, shape));
+                            view.getResources().getDisplayMetrics().density, shape, fontPercent));
                     XposedBridge.log("MobileTypeFrame: bound mobile_type " + label + " as " + shape);
                 }
             });
@@ -124,13 +133,16 @@ public final class MobileTypeFrame implements IXposedHookInitPackageResources, I
         return null;
     }
 
-    private static String selectedShape(Context context) {
+    private static Bundle selectedSettings(Context context) {
         try {
             Bundle data = context.getContentResolver().call(SETTINGS, "getShape", null, null);
-            if (data != null) return data.getString("shape", ShapeProvider.SQUARE);
+            if (data != null) return data;
         } catch (Throwable error) {
             XposedBridge.log("MobileTypeFrame: settings unavailable; using square: " + error);
         }
-        return ShapeProvider.SQUARE;
+        Bundle defaults = new Bundle();
+        defaults.putString("shape", ShapeProvider.SQUARE);
+        defaults.putInt("fontPercent", ShapeProvider.DEFAULT_FONT_PERCENT);
+        return defaults;
     }
 }

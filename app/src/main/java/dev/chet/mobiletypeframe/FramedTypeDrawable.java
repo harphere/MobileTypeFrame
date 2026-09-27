@@ -15,19 +15,19 @@ public final class FramedTypeDrawable extends Drawable {
     private final String label;
     private final float density;
     private final String shape;
+    private final int fontPercent;
     private final Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private ColorStateList tint;
     private int color = Color.WHITE;
     private int alpha = 255;
     private ColorFilter filter;
 
-    public FramedTypeDrawable(String label, float density, String shape) {
+    public FramedTypeDrawable(String label, float density, String shape, int fontPercent) {
         this.label = label;
         this.density = density;
         this.shape = shape;
-        paint.setTypeface(ShapeProvider.SIDE_WAVES.equals(shape)
-                ? Typeface.create("serif", Typeface.NORMAL)
-                : Typeface.create("sans-serif-condensed", Typeface.BOLD));
+        this.fontPercent = ShapeProvider.validFontPercent(fontPercent);
+        paint.setTypeface(Typeface.create("sans-serif-condensed", Typeface.BOLD));
     }
 
     @Override public void draw(Canvas canvas) {
@@ -53,7 +53,7 @@ public final class FramedTypeDrawable extends Drawable {
                     205, 83, false, paint);
         } else if (ShapeProvider.SIDE_WAVES.equals(shape)) {
             // Three concentric arcs to the right, as in the supplied reference.
-            float cx = b.left + width * .57f;
+            float cx = b.left + width * .60f;
             float cy = b.exactCenterY();
             paint.setStrokeWidth(Math.max(.68f * density, height * .055f));
             for (int i = 0; i < 3; i++) {
@@ -85,24 +85,35 @@ public final class FramedTypeDrawable extends Drawable {
         boolean unboxed = ShapeProvider.WAVES.equals(shape)
                 || ShapeProvider.SIDE_WAVES.equals(shape);
         float availableWidth = ShapeProvider.SIDE_WAVES.equals(shape)
-                ? width * .53f : width - (unboxed ? 2f : 4.4f) * inset;
+                ? width * .60f : width - (unboxed ? 2f : 4.4f) * inset;
         float availableHeight = height - (unboxed ? 2.5f : 3.5f) * inset;
-        paint.setTextSize(availableHeight * 0.94f);
+        paint.setTextSize(availableHeight * 0.94f * fontPercent / 100f);
         float measured = paint.measureText(label);
         if (measured > availableWidth) paint.setTextSize(paint.getTextSize() * availableWidth / measured);
         Paint.FontMetrics fm = paint.getFontMetrics();
         float baseline = b.exactCenterY() - (fm.ascent + fm.descent) / 2f
                 + (ShapeProvider.WAVES.equals(shape) ? height * .10f : 0f);
         float textCenter = ShapeProvider.SIDE_WAVES.equals(shape)
-                ? b.left + width * .29f : b.exactCenterX();
+                ? b.left + width * .30f : b.exactCenterX();
         canvas.drawText(label, textCenter, baseline, paint);
     }
 
     @Override public int getIntrinsicWidth() {
         float em = label.length() > 2 ? 26f : 21f;
-        if (ShapeProvider.SIDE_WAVES.equals(shape)) em += 7f;
+        if (ShapeProvider.SIDE_WAVES.equals(shape)) em = label.length() > 2 ? 38f : 31f;
         if (ShapeProvider.OPEN_CORNERS.equals(shape)) em += 1f;
-        return Math.round(em * density);
+        // Keep the intrinsic height at 16dp: SystemUI constrains the icon view's height.
+        // Widen the artwork to let larger letters retain their requested text size.
+        float inset = Math.max(.7f, 16f * .07f);
+        boolean sideWaves = ShapeProvider.SIDE_WAVES.equals(shape);
+        boolean unboxed = sideWaves || ShapeProvider.WAVES.equals(shape);
+        paint.setTextSize((16f - (unboxed ? 2.5f : 3.5f) * inset)
+                * .94f * fontPercent / 100f * density);
+        float textWidth = paint.measureText(label);
+        float minimumWidth = sideWaves
+                ? (textWidth + 2f * density) / .60f
+                : textWidth + (unboxed ? 2f : 4.4f) * inset * density;
+        return Math.round(Math.max(em * density, minimumWidth));
     }
     @Override public int getIntrinsicHeight() { return Math.round(16f * density); }
     @Override public void setAlpha(int value) { alpha = value; invalidateSelf(); }

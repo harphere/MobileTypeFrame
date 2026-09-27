@@ -6,13 +6,19 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 
-/** Exposes only the selected shape; no private user data. */
+/** Exposes only icon appearance settings; no private user data. */
 public final class ShapeProvider extends ContentProvider {
     public static final String SQUARE = "square";
     public static final String WAVES = "waves";
     public static final String OPEN_CORNERS = "open_corners";
     public static final String SIDE_WAVES = "side_waves";
     static final String PREFS = "mobile_type_frame";
+    static final int DEFAULT_FONT_PERCENT = 150;
+
+    static int validFontPercent(int percent) {
+        return percent == 100 || percent == 125 || percent == 150
+                ? percent : DEFAULT_FONT_PERCENT;
+    }
 
     @Override public boolean onCreate() { return true; }
 
@@ -25,6 +31,9 @@ public final class ShapeProvider extends ContentProvider {
             shape = SQUARE;
         }
         result.putString("shape", shape);
+        result.putInt("fontPercent", validFontPercent(getContext()
+                .getSharedPreferences(PREFS, 0)
+                .getInt("fontPercent", DEFAULT_FONT_PERCENT)));
         return result;
     }
 

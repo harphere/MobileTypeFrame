@@ -10,6 +10,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 public final class SettingsActivity extends Activity {
@@ -65,26 +66,66 @@ public final class SettingsActivity extends Activity {
             if (shapes[i].equals(current)) option.setChecked(true);
         }
         page.addView(group);
-        showPreview(preview, current);
+
+        TextView sizeTitle = new TextView(this);
+        sizeTitle.setText("5G / 4G / LTE font size");
+        sizeTitle.setTextSize(18);
+        sizeTitle.setTextColor(Color.WHITE);
+        sizeTitle.setPadding(0, dp(18), 0, dp(4));
+        page.addView(sizeTitle);
+
+        RadioGroup sizeGroup = new RadioGroup(this);
+        int[] sizes = { 100, 125, 150 };
+        String[] sizeNames = { "Normal (100%)", "Large (125%)", "Extra large (150%)" };
+        int selectedSize = ShapeProvider.validFontPercent(getSharedPreferences(
+                ShapeProvider.PREFS, 0).getInt("fontPercent", ShapeProvider.DEFAULT_FONT_PERCENT));
+        for (int i = 0; i < sizes.length; i++) {
+            RadioButton option = new RadioButton(this);
+            option.setId(View.generateViewId());
+            option.setText(sizeNames[i]);
+            option.setTextSize(18);
+            option.setTextColor(Color.WHITE);
+            option.setTag(sizes[i]);
+            option.setPadding(0, dp(7), 0, dp(7));
+            sizeGroup.addView(option);
+            if (sizes[i] == selectedSize) option.setChecked(true);
+        }
+        page.addView(sizeGroup);
+        final String[] previewShape = { current };
+        final int[] previewSize = { selectedSize };
+        showPreview(preview, current, selectedSize);
         group.setOnCheckedChangeListener((buttons, checkedId) -> {
             RadioButton selected = buttons.findViewById(checkedId);
             if (selected == null) return;
             String shape = (String) selected.getTag();
             getSharedPreferences(ShapeProvider.PREFS, 0).edit().putString("shape", shape).apply();
-            showPreview(preview, shape);
+            previewShape[0] = shape;
+            showPreview(preview, shape, previewSize[0]);
+        });
+        sizeGroup.setOnCheckedChangeListener((buttons, checkedId) -> {
+            RadioButton selected = buttons.findViewById(checkedId);
+            if (selected == null) return;
+            int percent = (Integer) selected.getTag();
+            getSharedPreferences(ShapeProvider.PREFS, 0).edit()
+                    .putInt("fontPercent", percent).apply();
+            previewSize[0] = percent;
+            showPreview(preview, previewShape[0], percent);
         });
 
         TextView hint = new TextView(this);
-        hint.setText("Reboot after changing the shape to refresh the status bar.");
+        hint.setText("Reboot after changing the style or font size to refresh the status bar.");
         hint.setTextColor(Color.LTGRAY);
         hint.setTextSize(14);
         hint.setPadding(0, dp(24), 0, 0);
         page.addView(hint);
-        setContentView(page);
+        ScrollView scroll = new ScrollView(this);
+        scroll.addView(page);
+        setContentView(scroll);
     }
 
-    private void showPreview(ImageView preview, String shape) {
-        Drawable drawable = new FramedTypeDrawable("5G", getResources().getDisplayMetrics().density, shape);
+    private void showPreview(ImageView preview, String shape, int fontPercent) {
+        Drawable drawable = new FramedTypeDrawable("5G", getResources().getDisplayMetrics().density,
+                shape, fontPercent);
         preview.setImageDrawable(drawable);
         preview.setScaleType(ImageView.ScaleType.FIT_CENTER);
     }
