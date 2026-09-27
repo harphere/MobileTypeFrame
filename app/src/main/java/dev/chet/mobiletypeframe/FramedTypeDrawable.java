@@ -6,6 +6,8 @@ import android.graphics.Color;
 import android.graphics.ColorFilter;
 import android.graphics.Paint;
 import android.graphics.PixelFormat;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
@@ -27,7 +29,10 @@ public final class FramedTypeDrawable extends Drawable {
         this.density = density;
         this.shape = shape;
         this.fontPercent = ShapeProvider.validFontPercent(fontPercent);
-        paint.setTypeface(Typeface.create("sans-serif-condensed", Typeface.BOLD));
+        int weight = ShapeProvider.ITALIC.equals(shape) ? Typeface.ITALIC
+                : ShapeProvider.BOLD_ITALIC.equals(shape) ? Typeface.BOLD_ITALIC
+                : Typeface.BOLD;
+        paint.setTypeface(Typeface.create("sans-serif-condensed", weight));
     }
 
     @Override public void draw(Canvas canvas) {
@@ -41,7 +46,10 @@ public final class FramedTypeDrawable extends Drawable {
         paint.setColorFilter(filter);
         paint.setStyle(Paint.Style.STROKE);
         paint.setStrokeWidth(stroke);
-        if (ShapeProvider.WAVES.equals(shape)) {
+        if (ShapeProvider.ITALIC.equals(shape)
+                || ShapeProvider.BOLD_ITALIC.equals(shape)) {
+            // Typography-only styles deliberately have no surrounding artwork.
+        } else if (ShapeProvider.WAVES.equals(shape)) {
             // Two short radio waves above the upper-right edge of the glyph.
             float right = b.right - inset;
             float top = b.top + inset;
@@ -74,6 +82,14 @@ public final class FramedTypeDrawable extends Drawable {
             canvas.drawLine(l, bottom, l + length, bottom, paint);
             canvas.drawLine(r, bottom - length, r, bottom, paint);
             canvas.drawLine(r - length, bottom, r, bottom, paint);
+        } else if (ShapeProvider.FILLED.equals(shape)) {
+            // Render the lettering as transparent cutouts so any status bar background
+            // shows through the badge, including light and tinted backgrounds.
+            canvas.saveLayer(b.left, b.top, b.right, b.bottom, null);
+            paint.setStyle(Paint.Style.FILL);
+            canvas.drawRoundRect(b.left + inset, b.top + inset,
+                    b.right - inset, b.bottom - inset,
+                    height * .14f, height * .14f, paint);
         } else {
             canvas.drawRoundRect(b.left + inset, b.top + inset,
                     b.right - inset, b.bottom - inset,
@@ -83,7 +99,9 @@ public final class FramedTypeDrawable extends Drawable {
         paint.setStyle(Paint.Style.FILL);
         paint.setTextAlign(Paint.Align.CENTER);
         boolean unboxed = ShapeProvider.WAVES.equals(shape)
-                || ShapeProvider.SIDE_WAVES.equals(shape);
+                || ShapeProvider.SIDE_WAVES.equals(shape)
+                || ShapeProvider.ITALIC.equals(shape)
+                || ShapeProvider.BOLD_ITALIC.equals(shape);
         float availableWidth = ShapeProvider.SIDE_WAVES.equals(shape)
                 ? width * .60f : width - (unboxed ? 2f : 4.4f) * inset;
         float availableHeight = height - (unboxed ? 2.5f : 3.5f) * inset;
@@ -95,7 +113,15 @@ public final class FramedTypeDrawable extends Drawable {
                 + (ShapeProvider.WAVES.equals(shape) ? height * .10f : 0f);
         float textCenter = ShapeProvider.SIDE_WAVES.equals(shape)
                 ? b.left + width * .30f : b.exactCenterX();
-        canvas.drawText(label, textCenter, baseline, paint);
+        if (ShapeProvider.FILLED.equals(shape)) {
+            paint.setColorFilter(null);
+            paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.CLEAR));
+            canvas.drawText(label, textCenter, baseline, paint);
+            paint.setXfermode(null);
+            canvas.restore();
+        } else {
+            canvas.drawText(label, textCenter, baseline, paint);
+        }
     }
 
     @Override public int getIntrinsicWidth() {
@@ -106,7 +132,9 @@ public final class FramedTypeDrawable extends Drawable {
         // Widen the artwork to let larger letters retain their requested text size.
         float inset = Math.max(.7f, 16f * .07f);
         boolean sideWaves = ShapeProvider.SIDE_WAVES.equals(shape);
-        boolean unboxed = sideWaves || ShapeProvider.WAVES.equals(shape);
+        boolean unboxed = sideWaves || ShapeProvider.WAVES.equals(shape)
+                || ShapeProvider.ITALIC.equals(shape)
+                || ShapeProvider.BOLD_ITALIC.equals(shape);
         paint.setTextSize((16f - (unboxed ? 2.5f : 3.5f) * inset)
                 * .94f * fontPercent / 100f * density);
         float textWidth = paint.measureText(label);

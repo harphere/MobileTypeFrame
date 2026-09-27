@@ -41,13 +41,18 @@ public final class SettingsActivity extends Activity {
 
         RadioGroup group = new RadioGroup(this);
         group.setOrientation(RadioGroup.VERTICAL);
-        final String[] shapes = { ShapeProvider.SQUARE, ShapeProvider.WAVES,
-                ShapeProvider.OPEN_CORNERS, ShapeProvider.SIDE_WAVES };
-        final String[] names = { "Square", "Waves", "Open Corners", "Side Waves" };
+        final String[] shapes = { ShapeProvider.SQUARE, ShapeProvider.FILLED,
+                ShapeProvider.WAVES, ShapeProvider.OPEN_CORNERS, ShapeProvider.SIDE_WAVES,
+                ShapeProvider.ITALIC, ShapeProvider.BOLD_ITALIC };
+        final String[] names = { "Square", "Filled", "Waves", "Open Corners",
+                "Side Waves", "Italic", "Bold Italic" };
         String current = getSharedPreferences(ShapeProvider.PREFS, 0)
                 .getString("shape", ShapeProvider.SQUARE);
         // Migrate the removed Circle choice so the picker always has a selection.
-        if (!ShapeProvider.SQUARE.equals(current) && !ShapeProvider.WAVES.equals(current)
+        if (!ShapeProvider.SQUARE.equals(current) && !ShapeProvider.FILLED.equals(current)
+                && !ShapeProvider.ITALIC.equals(current)
+                && !ShapeProvider.BOLD_ITALIC.equals(current)
+                && !ShapeProvider.WAVES.equals(current)
                 && !ShapeProvider.OPEN_CORNERS.equals(current)
                 && !ShapeProvider.SIDE_WAVES.equals(current)) {
             current = ShapeProvider.SQUARE;

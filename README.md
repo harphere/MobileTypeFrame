@@ -1,13 +1,17 @@
-# MobileTypeFrame v1.3.0
+# MobileTypeFrame v1.4.0
 
-Choose **Square**, **Waves**, **Open Corners**, or **Side Waves** from the app's
-launcher screen. Square is the compact outline, Waves has two short arcs above
+Choose **Square**, **Filled**, **Waves**, **Open Corners**, **Side Waves**,
+**Italic**, or **Bold Italic** from the app's launcher screen. Square is the
+compact outline. Filled draws a solid badge with transparent lettering so the
+status-bar background shows through the letters. Waves has two short arcs above
 the glyph, Open Corners frames it with four broken corners, and Side Waves has
-three arcs to the right like the supplied reference image. Circle was removed.
+three arcs to the right like the supplied reference image. Italic and Bold
+Italic are plain lettering with no frame. Circle was removed.
 An existing Circle selection changes to Square on update. The preview shows the
 current choice. The glyph still represents the actual network type reported
-by Android. All four styles use the same bold, condensed typeface; Side Waves
-has extra width so its `5G` stays the same size as the unboxed Waves glyph.
+by Android. The five framed and wave styles use the same bold, condensed
+typeface; Side Waves has extra width so its `5G` stays the same size as the
+unboxed Waves glyph. Italic and Bold Italic use condensed italic typefaces.
 Choose **Normal (100%)**, **Large (125%)**, or **Extra large (150%)** for the
 letter size. Extra large is the default, including after an update from 1.2.1;
 Normal restores the original font size. The drawable keeps its status-bar
@@ -23,7 +27,7 @@ not been verified on this particular device.
 Replace **all project files** in your GitHub repository with the contents of
 this ZIP. The earlier versions do not include the new drawing styles. Run
 **Actions → Build APK → Run workflow**, then download
-`MobileTypeFrame-v1.3.0-debug` and extract the APK. Alternatively,
+`MobileTypeFrame-v1.4.0-debug` and extract the APK. Alternatively,
 open the project with Android Studio, JDK 17 and Android SDK 36, then run
 `assembleDebug` with Gradle 8.11.1.
 

@@ -9,6 +9,9 @@ import android.os.Bundle;
 /** Exposes only icon appearance settings; no private user data. */
 public final class ShapeProvider extends ContentProvider {
     public static final String SQUARE = "square";
+    public static final String FILLED = "filled";
+    public static final String ITALIC = "italic";
+    public static final String BOLD_ITALIC = "bold_italic";
     public static final String WAVES = "waves";
     public static final String OPEN_CORNERS = "open_corners";
     public static final String SIDE_WAVES = "side_waves";
@@ -26,7 +29,9 @@ public final class ShapeProvider extends ContentProvider {
         if (!"getShape".equals(method)) return null;
         Bundle result = new Bundle();
         String shape = getContext().getSharedPreferences(PREFS, 0).getString("shape", SQUARE);
-        if (!SQUARE.equals(shape) && !WAVES.equals(shape)
+        if (!SQUARE.equals(shape) && !FILLED.equals(shape)
+                && !ITALIC.equals(shape) && !BOLD_ITALIC.equals(shape)
+                && !WAVES.equals(shape)
                 && !OPEN_CORNERS.equals(shape) && !SIDE_WAVES.equals(shape)) {
             shape = SQUARE;
         }
